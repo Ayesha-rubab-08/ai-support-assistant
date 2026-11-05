@@ -1,0 +1,251 @@
+{
+  "name": "Evaluation",
+  "nodes": [
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        -320,
+        -16
+      ],
+      "id": "daa6da87-7dcb-4e5a-b623-c527acd24782",
+      "name": "When clicking ‘Execute workflow’"
+    },
+    {
+      "parameters": {
+        "jsCode": "const tests = [\n  [1, \"Where is my order? I placed it 5 days ago.\", \"question\", false],\n  [2, \"My payment failed but money was deducted. Please help today.\", \"complaint\", true],\n  [3, \"How long does delivery take?\", \"question\", false],\n  [4, \"I received the wrong size and I am very disappointed.\", \"complaint\", false],\n  [5, \"Love the new summer collection, great quality!\", \"feedback\", false],\n  [6, \"Can I return a sale item?\", \"question\", false],\n  [7, \"The jacket arrived torn. I want a refund right now.\", \"complaint\", true],\n  [8, \"Hi\", \"other\", false],\n  [9, \"Thanks for the quick delivery!\", \"feedback\", false],\n  [10, \"Do you ship outside Pakistan?\", \"question\", false],\n  [11, \"Your website keeps crashing when I try to pay, I need to order today.\", \"complaint\", true],\n  [12, \"Please change my delivery address, my order ships today.\", \"question\", true],\n  [13, \"Great customer service, very helpful team.\", \"feedback\", false],\n  [14, \"I was charged twice for the same order!\", \"complaint\", true],\n  [15, \"What payment methods do you accept?\", \"question\", false],\n  [16, \"Just testing the form.\", \"other\", false],\n  [17, \"The colour is slightly different from the photo, but it is okay.\", \"feedback\", false],\n  [18, \"How do I find my size?\", \"question\", false],\n  [19, \"This is the third time my order is late. Terrible service.\", \"complaint\", true],\n  [20, \"asdfgh\", \"other\", false],\n  [21, \"I ordered a blue shirt but you sent me a red one. I need this fixed.\", \"complaint\", true],\n[22, \"Do you have this dress in size large?\", \"question\", false],\n[23, \"Love the new winter collection, the fabric is great!\", \"feedback\", false],\n[24, \"I still have not received my refund after two weeks. This is the second time I am asking.\", \"complaint\", true],\n[25, \"The packaging was a bit plain, but the shirt is nice.\", \"feedback\", false]\n];\n\nreturn tests.map(t => ({\n  json: {\n    id: t[0],\n    name: \"Test Customer\",\n    message: t[1],\n    expected_category: t[2],\n    expected_urgent: t[3]\n  }\n}));"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -96,
+        -16
+      ],
+      "id": "6fddab82-ee28-493e-88f3-c679f93a4cb5",
+      "name": "Test Messages"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=You are a customer support assistant. Analyse the message below.\n\nRules:\n- summary: one short sentence\n- category: one of complaint, question, feedback, other\n- sentiment: one of angry, neutral, happy\n- urgent: set to true ONLY if at least one of these is clearly true:\n  1. Money problem: a payment failed, money was deducted, or the customer was charged twice.\n  2. The item arrived damaged or defective, or the customer received a different product than the one ordered.\n  3. Time-sensitive request: the customer needs something done today or before the order ships (for example changing the address of an order that ships today).\n  4. The same problem happened more than once (for example \"third time\", \"second time\", \"again\", \"still not fixed\").\n  5. The customer demands an immediate refund, or threatens to leave or complain publicly.\n  Otherwise set urgent to false.\n  These are NOT urgent: a normal status question like \"where is my order\", a wrong size, a small difference from the photo, mild disappointment, normal questions, and normal feedback.\n- confidence: a number from 0 to 1, how sure you are about the category\n\nCustomer name: {{ $json.name }}\nCustomer message: {{ $json.message }}",
+        "hasOutputParser": true,
+        "messages": {
+          "messageValues": []
+        },
+        "batching": {
+          "batchSize": 1,
+          "delayBetweenBatches": 5000
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.chainLlm",
+      "typeVersion": 1.9,
+      "position": [
+        336,
+        96
+      ],
+      "id": "ac3d2e06-3708-4162-863b-9fb957818c16",
+      "name": "Basic LLM Chain",
+      "retryOnFail": true,
+      "waitBetweenTries": 3000
+    },
+    {
+      "parameters": {
+        "modelName": "models/gemini-3.5-flash-lite",
+        "options": {
+          "temperature": 0
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1.2,
+      "position": [
+        -64,
+        224
+      ],
+      "id": "638a77df-c1be-4a41-966c-783f8e30ad9d",
+      "name": "Google Gemini Chat Model",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "ziZ7y6WuIz7nNHhg",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsonSchemaExample": "{\n  \"summary\": \"one short sentence\",\n  \"category\": \"complaint\",\n  \"sentiment\": \"angry\",\n  \"urgent\": true,\n  \"confidence\": 0.85\n}"
+      },
+      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+      "typeVersion": 1.3,
+      "position": [
+        336,
+        304
+      ],
+      "id": "b1d7a08f-5fa1-47b9-92d6-5fd99b5d7458",
+      "name": "Structured Output Parser"
+    },
+    {
+      "parameters": {
+        "jsCode": "return $input.all().map((item, i) => {\n  const test = $('Test Messages').all()[i].json;\n  const out = item.json.output;\n  return {\n    json: {\n      id: test.id,\n      message: test.message,\n      expected_category: test.expected_category,\n      got_category: out.category,\n      category_ok: out.category === test.expected_category,\n      expected_urgent: test.expected_urgent,\n      got_urgent: out.urgent,\n      urgent_ok: out.urgent === test.expected_urgent,\n      confidence: out.confidence\n    }\n  };\n});"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        576,
+        -32
+      ],
+      "id": "af7ac377-74d9-45a3-b45e-de2839bf816a",
+      "name": "Compare"
+    },
+    {
+      "parameters": {
+        "jsCode": "const rows = $input.all().map(i => i.json);\nconst catOk = rows.filter(r => r.category_ok).length;\nconst urgOk = rows.filter(r => r.urgent_ok).length;\n\nreturn [{\n  json: {\n    total: rows.length,\n    category_accuracy: catOk + \"/\" + rows.length,\n    urgent_accuracy: urgOk + \"/\" + rows.length\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        800,
+        -32
+      ],
+      "id": "5c8e73bc-1d8e-4911-af9b-b6cee3222c5c",
+      "name": "Accuracy"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [
+        128,
+        -16
+      ],
+      "id": "426f7e4c-8fab-4f48-a975-e444e87bebeb",
+      "name": "Loop Over Items"
+    },
+    {
+      "parameters": {
+        "amount": 20
+      },
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        640,
+        256
+      ],
+      "id": "fb2bea5f-76f2-4752-bbc3-4e94aeb53b4a",
+      "name": "Wait",
+      "webhookId": "a968b41d-7df4-45d9-b9c6-f04d09e40d7d"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "When clicking ‘Execute workflow’": {
+      "main": [
+        [
+          {
+            "node": "Test Messages",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Basic LLM Chain": {
+      "main": [
+        [
+          {
+            "node": "Wait",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Gemini Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Basic LLM Chain",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Structured Output Parser": {
+      "ai_outputParser": [
+        [
+          {
+            "node": "Basic LLM Chain",
+            "type": "ai_outputParser",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Test Messages": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Compare": {
+      "main": [
+        [
+          {
+            "node": "Accuracy",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Loop Over Items": {
+      "main": [
+        [
+          {
+            "node": "Compare",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Basic LLM Chain",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "786e5acf-c46c-4606-82d6-4ca127538921",
+  "meta": {
+    "instanceId": "73a1314574e0334abb99159a24be5c806b5388cf5b2cb14469e6baa63d3645f8"
+  },
+  "nodeGroups": [],
+  "id": "IYJpcZfVxyGNfL3c",
+  "tags": []
+}

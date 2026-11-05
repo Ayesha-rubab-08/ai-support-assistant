@@ -1,0 +1,21 @@
+id,message,expected_category,expected_urgent
+1,Where is my order? I placed it 5 days ago.,question,false
+2,My payment failed but money was deducted. Please help today.,complaint,true
+3,How long does delivery take?,question,false
+4,I received the wrong size and I am very disappointed.,complaint,false
+5,"Love the new summer collection, great quality!",feedback,false
+6,Can I return a sale item?,question,false
+7,The jacket arrived torn. I want a refund right now.,complaint,true
+8,Hi,other,false
+9,Thanks for the quick delivery!,feedback,false
+10,Do you ship outside Pakistan?,question,false
+11,"Your website keeps crashing when I try to pay, I need to order today.",complaint,true
+12,"Please change my delivery address, my order ships today.",question,true
+13,"Great customer service, very helpful team.",feedback,false
+14,I was charged twice for the same order!,complaint,true
+15,What payment methods do you accept?,question,false
+16,Just testing the form.,other,false
+17,"The colour is slightly different from the photo, but it is okay.",feedback,false
+18,How do I find my size?,question,false
+19,This is the third time my order is late. Terrible service.,complaint,true
+20,asdfgh,other,false
