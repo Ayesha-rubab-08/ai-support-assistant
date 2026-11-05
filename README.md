@@ -85,25 +85,27 @@ curl -X POST http://localhost:5678/webhook-test/support-message -H "Content-Type
 
 
 
-* Main workflow:
-* 
-* !\[Main workflow](screenshots/main-workflow.png)
-* 
-* Sheet results (summary, category, reply draft, status):
-* 
-* !\[Sheet results](screenshots/sheet-results.png)
-* 
-* Evaluation result:
-* 
-* !\[Evaluation](screenshots/evaluation.png)
-* 
-* Webhook Intake workflow:
-* 
-* !\[Webhook Intake](screenshots/webhook-intake.png)
-* 
-* Error Handler run:
-* 
-* !\[Error Handler run](screenshots/error-handler-run.png)
+## Screenshots
+
+Main workflow:
+
+![Main workflow](screenshots/main-workflow.png)
+
+Sheet results (summary, category, reply draft, status):
+
+![Sheet results](screenshots/sheet-results.png)
+
+Evaluation result:
+
+![Evaluation](screenshots/evaluation.png)
+
+Webhook Intake workflow:
+
+![Webhook Intake](screenshots/webhook-intake.png)
+
+Error Handler run:
+
+![Error Handler run](screenshots/error-handler-run.png)
 
 
 
