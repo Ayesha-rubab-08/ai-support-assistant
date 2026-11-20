@@ -73,23 +73,24 @@ Honest caveats:
 
 ## Limitations
 
-* Runs locally; not deployed or tested in production.
+* Runs locally; not deployed to a public server.
 * The vector store is in memory. After an n8n or Docker restart, run FAQ Loader again, otherwise the agent answers with the fallback "A human agent will contact you soon".
 * The low-confidence step is an escalation alert, not a full human approval system (there is no approve button).
 * The Gemini free tier allows 15 requests per minute, so the Evaluation workflow uses a loop with a Wait node.
-* The Error Handler runs only when it is Published and a workflow fails on its own, not on manual Execute. It was triggered by real failed runs on 14 Nov. On those runs the alert email was not sent, because the Gmail credential needed to be reconnected. After I reconnected the credential, I received the test alert email.
-* The Webhook was tested with the Test URL and a manual run of the main workflow. The production Webhook URL with the main workflow Active is not tested yet.
+* The Error Handler runs only when it is Published and a workflow fails on its own, not on manual Execute. It was triggered by real failed runs on 14 Nov, but the alert email was not sent because the Gmail credential needed to be reconnected. After I reconnected the credential, a test failure (run #438, wrong Gemini model name) wrote the alert into the Sheet Status column and sent the alert email.
+* The production Webhook URL (`/webhook/`) was tested with curl against local n8n: the row was created and processed (summary, category, FAQ reply draft, Status: Draft Ready). It has only been run on localhost, not on a public server.
 *  There is no rate limit on alerts: a failure that repeats creates one alert per failed run.
 *  The Webhook has no authentication (Authentication: None). Anyone who can reach the URL can add a message. It is only reachable on localhost unless I expose it. Before any real use, add Header Auth.
 *  Rows are matched by Email, so a second message from the same email can overwrite the results of the first one.
-*  Prompt injection was not tested on this project. The customer message goes straight to Gemini. Injection tests exist in my separate Support Agent project.
+* When 5 form rows arrived at once, a run failed at Save Summary ("Column to Match On is required") and two rows stayed empty. Sending the same messages one at a time worked. I do not know the root cause yet.
+*  Prompt injection was not tested on this project. The customer message goes straight to Gemini. Injection tests exist in my separate [support-agent-n8n](https://github.com/Ayesha-rubab-08/support-agent-n8n) project.
 
   
 
 
 ## Setup (short)
 
-1. 1. Run n8n in Docker (my setup: https://github.com/Ayesha-rubab-08/n8n-docker-setup) and open http://localhost:5678.
+1.  Run n8n in Docker (my setup: https://github.com/Ayesha-rubab-08/n8n-docker-setup) and open http://localhost:5678.
 2. Import the workflow JSON files from the workflows folder.
 3. Create your own credentials: Google (Sheets and Gmail) and Google Gemini API key. No credentials are included in this repo.
 4. In the main workflow, open Settings and choose "Error Handler" as the Error workflow. Without this step, no failure alert is sent.
